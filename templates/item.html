@@ -1,0 +1,589 @@
+{% extends "layout.html" %}
+{% block title %}
+{{ item[0]['item_name'] }}
+{% endblock %}
+{% block main %}
+
+
+
+<div class="row mb-3">
+   <div class="col d-flex justify-content-center align-items-center">
+      <div class="btn-group d-block d-lg-none" role="group" aria-label="Basic radio toggle button group">
+         <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+         <label class="btn btn-outline-primary" for="btnradio1">Item Info</label>
+         <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+         <label class="btn btn-outline-primary" for="btnradio2">Transactions</label>
+      </div>
+   </div>
+</div>
+<div class="container">
+   <div class="row">
+      <div class="col col-lg-4 col-sm-8 mx-auto" id="item-info">
+         <!-- Item info (left column) -->
+         <div class="row">
+            <div class="col-10 mx-auto-sm d-lg-block">
+               <div class="card">
+                  <div style="position: relative; overflow: hidden;">
+                     <img src="{{ item[0]['img'] }}" class="card-img-top bg-light" alt="img" style="height: auto; object-fit: cover;">
+                  </div>
+                  <div class="card-body">
+                     <div class="card-content">
+                        <h4 class="card-title mb-3">日本鳴海Narumi...</h4>
+                        <div>
+                           <dl class="row">
+                              <dt class="col-sm-3">标签：</dt>
+                              <dd class="col-sm-9"><em>{{ item[0]['tags'] }}</em></dd>
+                           </dl>
+                        </div>
+                     </div>
+                  </div>
+                  <ul class="list-group list-group-flush">
+                     <li class="list-group-item">
+                        <div class="row">
+                           <dt class="col-sm-3">库存：</dt>
+                           <dd class="col-sm-9">{{ item[0]['stocks'] }}</dd>
+                        </div>
+                     </li>
+                     <li class="list-group-item">
+                        <div class="row">
+                           <dt class="col-sm-3">材质：</dt>
+                           <dd class="col-sm-9">{{ item[0]['material'] | capitalize}}</dd>
+                        </div>
+                     </li>
+                  </ul>
+                  <div class="card-body">
+                     <div class="row">
+                        <div class="col">
+                           <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal">编辑</button>
+                        </div>
+                        <div class="col">
+                          <button type="button" class="btn btn-outline-primary transactionEditor" data-bs-toggle="modal" data-bs-target="#buyModal" id="buyTransaction">入库</button>
+                       </div>
+                       <div class="col">
+                        <button type="button" class="btn btn-outline-success transactionEditor" data-bs-toggle="modal" data-bs-target="#sellModal" id="sellTransaction">售出</button>
+                     </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="col col-lg-8 d-lg-block d-none" id="transactions">
+         <!-- Transactions (right column) -->
+         <!-- Add your transaction buttons and history here -->
+         <!-- Button trigger modal -->
+
+
+         <div class="row filter">
+
+            <div class="col-2">
+               <label for="transaction-type">Type:</label>
+               <select id="transaction-type">
+                  <option value="all">All</option>
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
+               </select>
+            </div>
+
+            <div class="col-2">
+               <label for="month-range">Month:</label>
+               <select id="month-range">
+                  <option value="all">All</option>
+                  {% for i in range(1, 13) %}
+                  <option value="{{ i }}">{{ i }}</option>
+                  {% endfor %}
+               </select>
+            </div>
+
+            <div class="col-3 col-md-2">
+               <label for="year-range">Year:</label>
+               <select id="year-range">
+                     <option value="all">All</option>
+                     {% for i in range(current_year, current_year - 10, -1) %}
+                     <option value="{{ i }}">{{ i }}</option>
+                     {% endfor %}
+               </select>
+            </div>
+
+            <div class="col-3">
+               <label for="status">Status</label>
+               <select id="status">
+                  <option value="all">All</option>
+                  <option value="normal">Normal</option>
+                  <option value="edited">Edited</option>
+                  <option value="reversed">Reversed</option>
+               </select>
+            </div>
+         </div>
+
+
+         <div class="rightcol row mt-3 mb-4">
+            <div class="overflow-scroll">
+               <table class="table table-bordered" id="transaction-table">
+                  <thead>
+                     <tr>
+                        <th scope="col" class="thead">Order #</th>
+                        <th scope="col" class="thead">Type</th>
+                        <th scope="col" class="thead">Qty.</th>
+                        <th scope="col" class="thead">Total</th>
+                        <th scope="col" class="thead">Date</th>
+                        <th scope="col" class="thead">Action</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for transaction in transactions %}
+                     <tr data-status="{{ transaction['status'] }}" data-type="{{ transaction['type'] }}" {% if transaction['status'] == "edited" %} class="table-warning" {% elif transaction['status'] == "reversed" %} class="table-danger" {% endif %} >
+                        <th scope="row">{{ transaction['id'] }}</th>
+                        <td>{{ transaction['type'] | capitalize }}</td>
+
+                        <td>{{ transaction['quantity'] }}</td>
+                        {% if transaction['currency'] == 'yuan' %}
+                        <td>元 {{ transaction['price'] | int}}</td>
+                        {% else %}
+                        <td>円 {{ transaction['price'] | int}}</td>
+                        {% endif %}
+                        <td>{{ transaction['timestamp'] }}</td>
+                        <td>
+                           <button type="button" class="btn btn-secondary transactionEditor" id="editTransaction" value="{{ transaction['id'] }}" data-value1="{{ transaction['price'] / transaction['quantity'] }}" data-value2="{{ transaction['quantity'] }}" data-value3="{{ transaction['price'] }}">✎</button>
+                           <button type="button" class="btn btn-danger reverseTransaction" id="reverseTransaction" value="{{ transaction['id'] }}" data-value1="{{ transaction['price'] / transaction['quantity'] }}" data-value2="{{ transaction['quantity'] }}" data-value3="{{ transaction['price'] }}">X</button>
+                        </td>
+                     </tr>
+                     {% endfor %}
+
+                  </tbody>
+               </table>
+            </div>
+         </div>
+
+
+         <div class="rightcol row">
+            <form action="/item/{{ item_id }}" method="post">
+               <input hidden name="formUsage" value="add_notes">
+               <div class="input-group mb-3" style="width:100%">
+                  <button class="btn btn-outline-secondary" type="submit" id="button-addon1">Add</button>
+                  <input type="text" class="form-control" name="note_input" placeholder="Add to notes" aria-label="notes">
+                </div>
+            </form>
+         </div>
+
+         <div class="rightcol row">
+            <div class="form-control" id="noteTextArea" style="width: 100%" contenteditable="false">
+               {% for note in notes %}
+                   <em>{{ note['timestamp']}}</em> - {{ note['note'] }}
+                   <br>
+               {% endfor %}
+           </div>
+        </div>
+      </div>
+   </div>
+</div>
+
+<!-- Edit Modal -->
+<form action="/item/{{ item_id }}" method="post" enctype="multipart/form-data">
+   <input type="hidden" name="formUsage" value="edit">
+
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLable" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="editModalLable">编辑</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Modal content goes here -->
+          <div class="row mb-3">
+            <div class="col-5">
+               <label for="item_name" class="form-label">Item Name</label>
+               <input type="text" class="form-control" id="item_name" name="item_name" aria-describedby="item_name" value="{{item[0]['item_name']}}">
+            </div>
+            <div class="col">
+               <label for="stocks-3" class="form-label">Stocks</label>
+               <input type="number" class="form-control" value="{{item[0]['stocks']}}" min="1" id="stocks" name="stocks" aria-describedby="stocks">
+            </div>
+            <div class="col">
+               <label for="material-4" class="form-label">Material</label>
+               {% set materials = ["ceramic", "glass", "metal", "wood", "rattan", "fabric", "others"] %}
+               <select class="form-select" name="material" id="material" aria-label="material">
+                  {% for material in materials %}
+                     <option value="{{ material }}" {% if material == item[0]['material'] %} selected {% endif %}>{{ material | capitalize }}</option>
+                  {% endfor %}
+                </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="item_img" class="form-label">Change Image</label>
+            <input class="form-control" type="file" id="item_img" name="item_img">
+          </div>
+          <div class="mb-3">
+            <label for="tags" class="form-label">Tags</label>
+            <textarea type="text" class="form-control w-auto" id="tags" name="tags" aria-describedby="tagHelp" rows="2" cols="50">{{ item[0]['tags'] }}</textarea>
+            <div id="tagHelp" class="form-text">Enter tags/keywords for the item, separated by commas or spaces</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+<!-- Modal for buy, sell, edit-->
+<form action="/item/{{ item_id }}" method="post">
+  <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="modalTitle"></h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/item/{{ item_id }}" method="post">
+            <input type="hidden" name="formUsage" value="">
+            <input type="hidden" name="formName" value="">
+            <!-- Modal content goes here -->
+            <div class="row mb-3">
+              <div class="col-4">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control w-50" value="1" min="1" id="transaction_qty" name="quantity" aria-describedby="quantity">
+              </div>
+              <div class="col">
+                <div>
+                  <label for="price" class="form-label">Unit Price</label>
+                </div>
+                <div class="input-group" style="width:80%">
+                  <select class="form-select" id="price_unit" name="currency" aria-label="currency">
+                    <option selected value="yen">Yen</option>
+                    <option value="yuan">Yuan</option>
+                  </select>
+                  <input type="number" step="0.01" class="form-control w-50" min="0" id="transaction_price" name="price" aria-describedby="price">
+                </div>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-10">
+                <div>
+                  <label for="total" class="form-label">Total</label>
+                </div>
+                <div class="input-group">
+                  <select class="form-select" id="total_unit" aria-label="currency">
+                    <option selected value="yen">Yen</option>
+                    <option value="yuan">Yuan</option>
+                  </select>
+                  <input type="number" step="0.01" class="form-control w-50" min="0" id="transaction_total" name="total" aria-describedby="total">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="notes" class="form-label">Add to Notes</label>
+              <textarea type="text" class="form-control w-auto" id="buy_notes" name="notes" aria-describedby="notesHelp" rows="1" cols="50"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+
+ <!-- Modal for reverse-->
+<form action="/item/{{ item_id }}" method="post">
+
+  <div class="modal fade" id="reverseModal" tabindex="-1" aria-labelledby="ReverseTransaction" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="modalTitle">Reverse Transaction</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+         <div class="modal-body">
+            <form action="/item/{{ item_id }}" method="post">
+               <input type="hidden" name="formUsage" value="reverse_transaction">
+               <input type="hidden" name="formQty" id="transaction_qty" value="">
+               <input type="hidden" name="transactionId" id="transactionId" value="">
+               <div class="row">
+                  <div class="column">
+                     <p>
+                        Reverse following transaction:
+                     </p>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col">
+                     <p>
+                        <strong>Quantity: <span id="qtySpan"></span></strong>
+                     </p>
+                  </div>
+                  <div class="col">
+                     <p>
+                        <strong>Unit Price: <span id="unitPriceSpan"></span></strong>
+                     </p>
+                  </div>
+                  <div class="col">
+                     <p>
+                        <strong>Total: <span id="totalSpan"></span></strong>
+                     </p>
+                  </div>
+               </div>
+               <div class="mb-3">
+                  <label for="notes" class="form-label">Add to Notes</label>
+                  <textarea type="text" class="form-control w-auto" id="buy_notes" name="notes" aria-describedby="notesHelp" rows="1" cols="50"></textarea>
+               </div>
+       <div class="modal-footer">
+         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+         <button type="submit" class="btn btn-danger">Confirm</button>
+       </div>
+     </div>
+   </div>
+ </div>
+</form>
+
+
+
+<script>
+var btnradio1 = document.getElementById('btnradio1');
+var btnradio2 = document.getElementById('btnradio2');
+var itemInfo = document.getElementById('item-info');
+var transactions = document.getElementById('transactions');
+
+window.addEventListener('resize', function() {
+  // Ensure both columns are visible when screen width exceeds 768 pixels
+  if (window.innerWidth > 992) {
+    itemInfo.style.display = 'block';
+    transactions.style.display = 'block';
+  } else {
+    if (btnradio1.checked) {
+      itemInfo.style.display = 'block';
+      transactions.style.display = 'none';
+    } else {
+      itemInfo.style.display = 'none';
+      transactions.style.display = 'block';
+    }
+  }
+});
+
+
+btnradio1.addEventListener('click', function() {
+  itemInfo.style.display = 'block';
+  transactions.style.display = 'none';
+});
+
+btnradio2.addEventListener('click', function() {
+  itemInfo.style.display = 'none';
+  transactions.classList.remove('d-lg-block', 'd-none')
+  transactions.style.display = 'block';
+});
+</script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+   // Your code here
+   const type = document.getElementById('transaction-type');
+   const year = document.getElementById('year-range');
+   const month = document.getElementById('month-range');
+   const status = document.getElementById('status');
+
+
+   const table = document.getElementById('transaction-table');
+   const tbody = table.querySelector('tbody');
+
+   // make year select current year if month != all
+   month.addEventListener('change', function() {
+      if (month.value != "all" && year.value == "all") {
+         year.value = {{ current_year }};
+      }
+   });
+
+   // make month all if year all
+   year.addEventListener('change', function() {
+      if (year.value == "all") {
+         month.value = "all";
+      }
+   });
+
+   type.addEventListener('change', updateTable);
+   year.addEventListener('change', updateTable);
+   month.addEventListener('change', updateTable);
+   status.addEventListener('change', updateTable);
+
+
+   function updateTable() {
+
+      for (let i = 0; i < tbody.rows.length; i++) {
+
+         let date = tbody.rows[i].cells[4].innerText.slice(0, 10);
+         let datestamp = new Date(date);
+
+         let rowMonth = datestamp.getMonth() + 1;
+         let rowYear = datestamp.getFullYear();
+
+         let transaction_status = tbody.rows[i].dataset.status;
+         let transaction_type = tbody.rows[i].dataset.type;
+
+
+         if ((type.value == "all" || transaction_type == type.value) && (year.value == "all" || year.value == rowYear) && (month.value == "all" || month.value == rowMonth) && (status.value == "all" || status.value == transaction_status)) {
+            tbody.rows[i].style.display = 'table-row';
+         }
+         else {
+            tbody.rows[i].style.display = 'none';
+         }
+      }
+}
+});
+</script>
+
+
+<script>
+   var transaction_qty = document.getElementById('transaction_qty');
+   var price_unit = document.getElementById('price_unit');
+   var transaction_price = document.getElementById('transaction_price');
+   var total_unit = document.getElementById('total_unit');
+   var transaction_total = document.getElementById('transaction_total');
+
+   price_unit.addEventListener('change', updateUnit);
+   total_unit.addEventListener('change', updateUnit);
+
+   function updateUnit(event) {
+      if (event.target.id === 'price_unit') {
+         total_unit.value = price_unit.value;
+      };
+      if (event.target.id ==='total_unit') {
+         price_unit.value = total_unit.value;
+      };
+   };
+
+   transaction_price.addEventListener('input', updateInput);
+   transaction_total.addEventListener('input', updateInput);
+   transaction_qty.addEventListener('input', updateInput);
+
+   function updateInput(event) {
+      if (event.target.id === 'transaction_price') {
+         transaction_total.value = (transaction_price.value * transaction_qty.value).toFixed(2);
+      }
+      else if (event.target.id === 'transaction_qty') {
+         if (transaction_price.value != "" && transaction_total.value != "") {
+            transaction_total.value = (transaction_price.value * transaction_qty.value).toFixed(2);
+         }
+         else if (transaction_price.value === "" && transaction_total.value != "") {
+            transaction_price.value = (transaction_total.value / transaction_qty.value).toFixed(2);
+         }
+         else if (transaction_price.value != "" && transaction_total.value === "") {
+            transaction_total.value = (transaction_price.value * transaction_qty.value).toFixed(2);
+         }
+      }
+      else if (event.target.id === 'transaction_total') {
+         transaction_price.value = (transaction_total.value / transaction_qty.value).toFixed(2);
+      }
+   }
+</script>
+
+<script>
+
+var transaction_qty = document.getElementById('transaction_qty');
+var price_unit = document.getElementById('price_unit');
+var transaction_price = document.getElementById('transaction_price');
+var total_unit = document.getElementById('total_unit');
+var transaction_total = document.getElementById('transaction_total');
+
+price_unit.addEventListener('change', updateUnit);
+total_unit.addEventListener('change', updateUnit);
+
+function updateUnit(event) {
+   if (event.target.id === 'price_unit') {
+      total_unit.value = price_unit.value;
+   };
+   if (event.target.id ==='total_unit') {
+      price_unit.value = total_unit.value;
+   };
+};
+
+$('#transaction_price, #transaction_total, #transaction_qty').on('input', updateInput);
+
+function updateInput(event) {
+   if (event.target.id === 'transaction_price') {
+      transaction_total.value = (transaction_price.value * transaction_qty.value).toFixed(2);
+   }
+   else if (event.target.id === 'transaction_qty') {
+      if (transaction_price.value != "" && transaction_total.value != "") {
+         transaction_total.value = (transaction_price.value * transaction_qty.value).toFixed(2);
+      }
+      else if (transaction_price.value === "" && transaction_total.value != "") {
+         transaction_price.value = (transaction_total.value / transaction_qty.value).toFixed(2);
+      }
+      else if (transaction_price.value != "" && transaction_total.value === "") {
+         transaction_total.value = (transaction_price.value * transaction_qty.value).toFixed(2);
+      }
+   }
+   else if (event.target.id === 'transaction_total') {
+      transaction_price.value = (transaction_total.value / transaction_qty.value).toFixed(2);
+   }
+}
+
+$(".transactionEditor").click(function() {
+   if (this.id == 'buyTransaction' || this.id =='sellTransaction') {
+      if (this.id == 'buyTransaction') {
+         $("#price_unit").val("yen");
+         $("#total_unit").val("yen");
+         $("input[name='formUsage']").val("buy")
+         $("input[name='formName']").val("")
+         $("#modalTitle").text("Buy")
+      }
+      else {
+         $("#price_unit").val("yuan");
+         $("#total_unit").val("yuan");
+         $("input[name='formUsage']").val("sell")
+         $("input[name='formName']").val("")
+         $("#modalTitle").text("Sell")
+      }
+      $('#transaction_qty').val("1");
+      $('#transaction_price').val("");
+      $('#transaction_total').val("");
+
+   }
+   if (this.id == 'editTransaction') {
+      var transactionId = $(this).val();
+      $("input[name='formUsage']").val("edit_transaction")
+      $("input[name='formName']").val(transactionId);
+      $("#modalTitle").text("Edit Transaction");
+
+      $('#transaction_qty').val($(this).data('value2'));
+      $('#transaction_price').val(parseFloat($(this).data('value1')).toFixed(2));
+      $('#transaction_total').val($(this).data('value3'));
+   }
+   $("#transactionModal").modal('show');
+})
+
+$(".reverseTransaction").click(function() {
+   var transactionId = $(this).val();
+   $("input[id='transactionId']").val(transactionId)
+   $("input[name='formQty']").val($(this).data('value2'))
+   $("#qtySpan").text($(this).data('value2'));
+   $("#unitPriceSpan").text($(this).data('value1'));
+   $("#totalSpan").text($(this).data('value3'));
+
+   $("#reverseModal").modal('show');
+})
+ff
+
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+

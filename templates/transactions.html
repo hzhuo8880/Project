@@ -1,0 +1,278 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Transaction
+{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row">
+        <div class="input-group input-group-sm mb-3">
+            <select id="transaction-type" class="btn btn-outline-secondary dropdown-toggle">
+                <option value="type" selected disabled>Type</option>
+                <option value="all">All</option>
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
+              </select>
+
+              <select id="month-range" class="btn btn-outline-secondary dropdown-toggle">
+                <option value="month" selected disabled>Month</option>
+                <option value="all">All</option>
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+              </select>
+
+              <select id="year-range" class="btn btn-outline-secondary dropdown-toggle">
+                <option value="year" selected disabled>Year</option>
+                <option value="all">All</option>
+                {% for i in range(current_year, current_year - 10, -1) %}
+                <option value="{{ i }}">{{ i }}</option>
+                {% endfor %}
+              </select>
+
+              <select id="status" class="btn btn-outline-secondary dropdown-toggle">
+                <option value="status" selected disabled>Status</option>
+                <option value="all">All</option>
+                <option value="normal">Normal</option>
+                <option value="edited">Edited</option>
+                <option value="reversed">Reversed</option>
+             </select>
+
+            <input type="text" class="form-control" id="input" aria-label="Text input with dropdown button">
+          </div>
+    </div>
+</div>
+
+<div class="container mb-3">
+    <div class="row">
+        <div class="col">
+            <div class="transactions-scroll">
+                <table id="transaction-table" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="thead">Order #</th>
+                            <th scope="col" class="thead">Item</th>
+                            <th scope="col" class="thead">Type</th>
+                            <th scope="col" class="thead">Qty.</th>
+                            <th scope="col" class="thead">Total</th>
+                            <th scope="col" class="thead">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr data-id="{{ transaction['id'] }}" data-price="{{ transaction['price'] }}" data-currency="{{ transaction['currency'] }}" {% if transaction['type'] == 'expensewhat' or transaction['type'] == 'buy' %} data-type="buy" {% else %} data-type="sell" {% endif %} data-status="{{ transaction['status'] }}" {% if transaction['status'] == "edited" %} class="table-warning body-row" {% elif transaction['status'] == "reversed" %} class="table-danger body-row" {% else %} class="body-row" {% endif %}>
+                            <th scope="row">{{ transaction['id'] }}</th>
+                            <td>{% if transaction['item_name'] == None %} Others {% else %} {{ transaction['item_name'] }} {% endif %}</td>
+                            <td> {{ transaction['type'] | capitalize }}</td>
+                            <td> {{ transaction['quantity'] }}</td>
+                            <td> {% if transaction['currency']  == 'yuan' %}<span>元</span> {% else %} <span>円</span> {% endif %}{{ transaction['price'] | int }} </td>
+                            <td> {{ transaction['timestamp'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 text-start">
+            <form action="/transactions", method="post">
+                <div class="input-group input-group-sm mb-3">
+                    <span class="input-group-text">Add Others: </span>
+                    <select name="typeSelect" id="typeSelect" class="btn btn-outline-secondary dropdown-toggle">
+                        <option value="expense" selected>Expense</option>
+                        <option value="revenue">Revenue</option>
+                     </select>
+
+                    <input placeholder="Price" type="number" name="priceInput" class="form-control" id="input" aria-label="Text input with dropdown button">
+                    <select name="currencySelect" id="currencySelect" class="btn btn-outline-secondary dropdown-toggle">
+                        <option value="yen" selected>円</option>
+                        <option value="yuan">元</option>
+                     </select>
+                    <button class="btn btn-outline-primary" type="submit">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="container">
+    <div class="row g-3 mb-2">
+        <div class="col-auto">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="currency" id="yenRadio" checked>
+                <label class="form-check-label" for="yenRadio">
+                  円
+                </label>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="currency" id="yuanRadio">
+                <label class="form-check-label" for="yuanRadio">
+                  元
+                </label>
+            </div>
+        </div>
+        <div class="col-auto">
+            <p>|</p>
+        </div>
+
+        <div class="col-auto">
+            <p>Expense: <span id="expense">...</span><span class="currency"></span></p>
+        </div>
+        <div class="col-auto">
+            <p>|</p>
+        </div>
+        <div class="col-auto">
+            <p>Income: <span id="income">...</span><span class="currency"></span></p>
+        </div>
+        <div class="col-auto">
+            <p>|</p>
+        </div>
+        <div class="col-auto">
+            <p>Profit: <span id="profit">...</span><span class="currency"></span></p>
+        </div>
+    </div>
+</div>
+
+
+<a href="https://www.exchangerate-api.com">Rates By Exchange Rate API</a>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+       // Your code here
+       const type = document.getElementById('transaction-type');
+       const year = document.getElementById('year-range');
+       const month = document.getElementById('month-range');
+       const status = document.getElementById('status');
+
+       const input = document.getElementById('input');
+
+       const table = document.getElementById('transaction-table');
+       const tbody = table.querySelector('tbody');
+
+       // make year select current year if month != all
+       month.addEventListener('change', function() {
+          if (month.value != "all" && (year.value == "all" || year.value =="year")) {
+             year.value = {{ current_year }};
+          }
+       });
+
+       // make month all if year all
+       year.addEventListener('change', function() {
+          if (year.value == "all") {
+             month.value = "all";
+          }
+       });
+
+       type.addEventListener('change', updateData);
+       year.addEventListener('change', updateData);
+       month.addEventListener('change', updateData);
+       status.addEventListener('change', updateData);
+       input.addEventListener('input', updateData);
+       document.getElementById('yenRadio').addEventListener('change', updateData);
+       document.getElementById('yuanRadio').addEventListener('change', updateData);
+
+       async function updateData() {
+        // Fetch the search results
+        let headers = new Headers();
+        headers.append('X-Requested-With', 'XMLHttpRequest');
+        let response = await fetch('/transactions?q=' + input.value, { headers: headers });
+        let result_id = await response.json();
+
+        yenSell = 0;
+        yenBuy = 0;
+        yuanSell = 0;
+        yuanBuy = 0;
+
+        for (let i = 0; i < tbody.rows.length; i++) {
+            let date = tbody.rows[i].cells[5].innerText.slice(0, 10);
+            let datestamp = new Date(date);
+            let rowMonth = datestamp.getMonth() + 1;
+            let rowYear = datestamp.getFullYear();
+            let transaction_status = tbody.rows[i].dataset.status;
+            let transaction_type = tbody.rows[i].dataset.type;
+            let transaction_price = parseFloat(tbody.rows[i].dataset.price);
+            let transaction_currency = tbody.rows[i].dataset.currency;
+
+            // Check if the row matches the filters and is included in the search results
+            if (result_id.includes(parseInt(tbody.rows[i].dataset.id)) && (type.value == "all" || type.value =="type" || transaction_type == type.value) && (year.value == "all" || year.value == "year" || year.value == rowYear) && (month.value == "all" || month.value == "month" || month.value == rowMonth) && (status.value == "all" || status.value == "status" || status.value == transaction_status)) {
+                tbody.rows[i].style.display = 'table-row';
+                if (transaction_status != "reversed") {
+                    if (transaction_type == 'sell' && transaction_currency == 'yen') {
+                        yenSell += transaction_price;
+                    }
+                    if (transaction_type == 'buy' && transaction_currency == 'yen') {
+                        yenBuy += transaction_price;
+                    }
+                    if (transaction_type == 'sell' && transaction_currency == 'yuan') {
+                        yuanSell += transaction_price;
+                    }
+                    if (transaction_type == 'buy' && transaction_currency == 'yuan') {
+                        yuanBuy += transaction_price;
+                    }
+                }
+            }
+            else {
+                tbody.rows[i].style.display = 'none';
+            }
+
+        }
+        console.clear()
+        console.log('yen sell: ' + yenSell)
+        console.log('yen buy: ' + yenBuy)
+        console.log('yuan sell: ' + yuanSell)
+        console.log('yuan buy: ' + yuanBuy)
+
+        fetch('https://open.er-api.com/v6/latest/JPY')
+            .then(response => response.json())
+            .then(data => x = data.rates.CNY)
+            .then(() => {
+                if (document.getElementById('yenRadio').checked) {
+                    var currencys = document.getElementsByClassName('currency');
+                    for (var i = 0; i < currencys.length; i++) {
+                        currencys[i].innerHTML = ' 円'
+                    }
+                    total_buy_jpy = Math.round(yenBuy + yuanBuy / x)
+                    total_sell_jpy = Math.round(yenSell + yuanSell / x)
+                    total_profit_jpy = total_sell_jpy - total_buy_jpy
+                    document.getElementById("expense").innerHTML = total_buy_jpy.toLocaleString()
+                    document.getElementById("income").innerHTML = total_sell_jpy.toLocaleString()
+                    document.getElementById("profit").innerHTML = total_profit_jpy.toLocaleString()
+                }
+
+                else {
+                    var currencys = document.getElementsByClassName('currency');
+                    for (var i = 0; i < currencys.length; i++) {
+                        currencys[i].innerHTML = ' 元'
+                    }
+
+                    total_buy_cny = Math.round(yuanBuy + yenBuy * x)
+                    total_sell_cny = Math.round(yuanSell + yenSell * x)
+                    total_profit_cny = total_sell_cny - total_buy_cny
+                    document.getElementById("expense").innerHTML = total_buy_cny.toLocaleString()
+                    document.getElementById("income").innerHTML = total_sell_cny.toLocaleString()
+                    document.getElementById("profit").innerHTML = total_profit_cny.toLocaleString()
+
+                }
+
+            })
+            .then(() => console.log(x))
+    }
+    });
+</script>
+
+
+
+{% endblock %}
+

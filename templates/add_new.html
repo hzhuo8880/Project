@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add New
+{% endblock %}
+
+{% block main %}
+<div class="container h-100 d-flex justify-content-center">
+    <form action="/add_new" method="post" enctype="multipart/form-data">
+      <div class="row mb-3">
+        <div class="col">
+          <label for="item_name" class="form-label">Item Name</label><span style="color: red">*</span>
+          <input type="text" class="form-control w-auto" id="item_name" name="item_name" aria-describedby="item_name">
+        </div>
+        <div class="col">
+          <label for="material-4" class="form-label">Material</label><span style="color: red">*</span>
+          {% set materials = ["ceramic", "glass", "metal", "wood", "rattan", "fabric", "others"] %}
+          <select class="form-select w-auto" name="material" id="material" aria-label="material">
+            <option value="default" selected>--Select--</option>
+             {% for material in materials %}
+                <option value="{{ material }}">{{ material | capitalize }}</option>
+             {% endfor %}
+           </select>
+       </div>
+      </div>
+      <div class="mb-3">
+        <label for="item_img" class="form-label">Image</label>
+        <input class="form-control" type="file" id="item_img" name="item_img">
+      </div>
+      <div class="row mb-3">
+        <div class="col">
+          <label for="price" class="form-label">Price</label><span style="color: red">*</span>
+          <input type="number" class="form-control w-auto" min="0" id="price" name="price" aria-describedby="price">
+        </div>
+        <div class="col">
+          <label for="quantity" class="form-label">Quantity</label><span style="color: red">*</span>
+          <input type="number" class="form-control w-50" value="1" min="1" id="quantity" name="quantity" aria-describedby="quantity">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="tags" class="form-label">Tags</label>
+        <textarea type="text" class="form-control w-80" id="tags" name="tags" aria-describedby="tagHelp" rows="2"></textarea>
+        <div id="tagHelp" class="form-text">Enter tags/keywords for the item, separated by commas or spaces</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+{% endblock %}
+
+

@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    INDEX
+{% endblock %}
+
+{% block main %}
+<input class="form-control mb-3" type="text" placeholder="Search" aria-label="search" id="input">
+
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+		<div class="table-scroll">
+			<table class="table table-hover">
+				<thead>
+				  <tr>
+					<th scope="col">#</th>
+					<th scope="col">Image</th>
+					<th scope="col">Name</th>
+					<th scope="col">Stock</th>
+					<th scope="col">Keyword</th>
+
+				  </tr>
+				</thead>
+				<tbody>
+				  {% for row in rows %}
+				  <tr data-href="{{ url_for('item', item_id=row['id']) }}" data-id="{{ row['id'] }}" class="clickable-row img-fluid img-thumbnail" alt="IMG">
+					  <th scope="row">{{ row["id"] }}</th>
+					  <td class="w-15">
+						  <img src="{{ row['img'] }}" class="img-fluid img-thumbnail square-image" loading="layz" role="presentation" alt="IMG">
+					  </td>
+					  <td>{{ row["item_name"] }}</td>
+					  <td>{{ row["stocks"] }}</td>
+					  <td>{{ row["tags"] }}</td>
+				  </tr>
+				  {% endfor %}
+				</tbody>
+			  </table>
+		</div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+let input = document.getElementById('input');
+input.addEventListener('input', async function() {
+	let trs = Array.from(document.getElementsByClassName('clickable-row'));
+	let response = await fetch('/search?q=' + input.value);
+	let result_id = await response.json();
+
+	trs.forEach(tr => {
+		if (result_id.includes(parseInt(tr.dataset.id))) {
+			tr.style.display = 'table-row';
+		}
+		else {
+			tr.style.display = 'none';
+		}
+	})
+})
+</script>
+
+<script>
+	jQuery(document).ready(function($) {
+    $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+    });
+});
+</script>
+
+{% endblock %}

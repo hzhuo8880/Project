@@ -1,0 +1,100 @@
+/* Size for brand */
+nav .navbar-brand
+{
+    font-size: xx-large;
+}
+
+nav {
+  postion: sticky;
+}
+
+  .table-image {
+    td, th {
+      vertical-align: middle;
+      text-align: center; /* For horizontal alignment */
+    }
+  }
+
+  .w-15 {
+    width: 20% !important;
+  }
+
+  .square-image {
+    width: 100px; /* adjust as needed */
+    height: 100px; /* adjust as needed */
+    object-fit: cover;
+}
+
+
+.overflow-scroll {
+  width: 100%; /* or any width */
+  height: 300px; /* or any height */
+  overflow: auto;
+}
+
+@media (max-width: 991px) {
+  .mx-auto-sm {
+      margin-left: auto;
+      margin-right: auto;
+  }
+  .rightcol {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+}
+
+
+dd {
+  margin-bottom: 0; /* Remove the margin-bottom */
+}
+
+.thead {
+  position: sticky;
+  top: 0;
+}
+
+.table-bordered {
+    width: 100%;
+}
+
+
+@media screen and (max-width: 1399px) {
+  .filter {
+    max-width: 650px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .filter {
+    max-width: 450px;
+  }
+}
+
+
+@media screen and (max-width: 335px) {
+  .filter {
+    max-width: 50px;
+  }
+}
+
+#noteTextArea {
+  height: 215px; /* or whatever height you want */
+  overflow-y: auto; /* this makes it scrollable */
+}
+
+.align-end {
+  text-align: right;
+}
+
+.transactions-scroll {
+  width: 100%; /* or any width */
+  height: 500px; /* or any height */
+  overflow: auto;
+}
+
+.table-scroll {
+  width: 100%; /* or any width */
+  height: 700px; /* or any height */
+  overflow: auto;
+}

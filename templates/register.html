@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+  <div class="container h-100 d-flex justify-content-center">
+    <form action="/register" method="post">
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control w-auto" id="username" name="username" aria-describedby="usernameHelp">
+        <div id="usernameHelp" class="form-text">Choose a username of 5 - 15 characters</div>
+      </div>
+      <div class="mb-3">
+        <label for="contact" class="form-label">Email</label>
+        <input type="text" class="form-control w-auto" id="contact" name="contact" aria-describedby="contactHelp">
+        <div id="contactHelp" class="form-text">Please enter your email adress</div>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control w-auto" id="password" name="password" aria-describedby="passwordHelp">
+        <div id="passwordHelp" class="form-text">Choose a password of 5 - 15 characters</div>
+      </div>
+      <div class="mb-3">
+        <label for="confirmation" class="form-label">Confirm Password</label>
+        <input type="password" class="form-control w-auto" id="confirmation" name="confirmation" aria-describedby="confirmationHelp">
+        <div id="confirmationHelp" class="form-text">Please ReEnter your password</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+{% endblock %}

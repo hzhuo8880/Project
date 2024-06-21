@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Registrants
+{% endblock %}
+
+{% block main %}
+<div class="container">
+    <p class="d-inline-flex gap-1">
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+          New Requests
+        </button>
+    </p>
+    <div class="collapse" id="collapseExample">
+        <div class="card card-body">
+          {% if new %}
+            {% for each in new %}
+            <div class="row">
+              <div class="col-lg-5 text-start">
+                <form action="/registrants", method="post">
+                  <div class="input-group input-group-sm mb-3">
+                    <span class="input-group-text">Contact: </span>
+                    <input value="{{ each['contact'] }}" readonly type="text" class="form-control">
+                    <input hidden name="person_id" value="{{ each['id'] }}">
+                    <select name="access" id="access" class="btn btn-outline-secondary dropdown-toggle">
+                      <option disabled selected>Action</option>
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                      <option value="delete">Delete</option>
+                    </select>
+                    <button class="btn btn-outline-primary" type="submit">Confirm</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+
+
+          {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <thead>
+                    <tr>
+                      <th scope="col">ID</th>
+                      <th scope="col">Username</th>
+                      <th scope="col">Contact</th>
+                      <th scope="col">Access</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for each in all %}
+                    <tr>
+                        <th scope="row">{{ each['id'] }}</th>
+                        <td>{{ each['username'] }}</td>
+                        <td>{{ each['contact'] }}</td>
+                        <td>{% if each['admin'] == 1 %} Admin {% else %} User {% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}
