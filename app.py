@@ -335,12 +335,13 @@ def transactions():
             result_list = []
 
             for each in transactions:
-                match = 0
-                for element in query:
-                    if element == str(each['id']) or element in each['item_name'].lower():
-                        match += 1
-                if match == len(query):
-                    result_list.append(each['id'])
+                if each['item_name']:
+                    match = 0
+                    for element in query:
+                        if element == str(each['id']) or element in each['item_name'].lower():
+                            match += 1
+                    if match == len(query):
+                        result_list.append(each['id'])
             return jsonify(result_list)
 
         else:
