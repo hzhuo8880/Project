@@ -77,14 +77,13 @@ current_year = datetime.datetime.now().year
 def utc_to_local(utc_string):
     # Convert the UTC string to a datetime object
     utc_dt = datetime.datetime.strptime(utc_string, '%Y-%m-%d %H:%M:%S')
-
+    # Get timezone
+    local_tz = pytz.timezone('Asia/Tokyo')
     # Convert to local time
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone('Asia/Tokyo')
-
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
     # Format the local time as a string
     local_time_str = local_dt.strftime('%Y-%m-%d')
     return local_time_str + "JST"
-
 
 
 @app.route("/")
@@ -284,7 +283,6 @@ def login():
             session["admin"] = True
 
         # Redirect to home page
-        flash('login successful', 'primary')
         return redirect("/")
 
     else:
