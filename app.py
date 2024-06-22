@@ -78,21 +78,12 @@ def utc_to_local(utc_string):
     # Convert the UTC string to a datetime object
     utc_dt = datetime.datetime.strptime(utc_string, '%Y-%m-%d %H:%M:%S')
 
-    user_timezone = datetime.datetime.now().astimezone().tzname()
-    if user_timezone == 'JST':
-        # Automatically detect the user's local timezone
-        local_tz = pytz.timezone('Asia/Tokyo')
-    elif user_timezone == 'CST':
-        local_tz = pytz.timezone('Asia/Shanghai')
-    else:
-        return "UTC " + utc_string
-
     # Convert to local time
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone('Asia/Tokyo')
 
     # Format the local time as a string
     local_time_str = local_dt.strftime('%Y-%m-%d')
-    return local_time_str + " " + user_timezone
+    return local_time_str + "JST"
 
 
 
@@ -335,17 +326,16 @@ def transactions():
             result_list = []
 
             for each in transactions:
-                if each['item_name']:
-                    match = 0
-                    for element in query:
-                        if element == str(each['id']) or element in each['item_name'].lower():
-                            match += 1
-                    if match == len(query):
-                        result_list.append(each['id'])
+                if not each['item_name']:
+                    each['item_name'] = 'others'
+                match = 0
+                for element in query:
+                    if element == str(each['id']) or element in each['item_name'].lower():
+                        match += 1
+                if match == len(query):
+                    result_list.append(each['id'])
             return jsonify(result_list)
-
         else:
-
             return render_template("transactions.html", transactions = transactions, current_year = current_year)
 
 
