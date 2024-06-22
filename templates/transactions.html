@@ -61,7 +61,7 @@
                     </thead>
                     <tbody>
                         {% for transaction in transactions %}
-                        <tr data-id="{{ transaction['id'] }}" data-price="{{ transaction['price'] }}" data-currency="{{ transaction['currency'] }}" {% if transaction['type'] == 'expensewhat' or transaction['type'] == 'buy' %} data-type="buy" {% else %} data-type="sell" {% endif %} data-status="{{ transaction['status'] }}" {% if transaction['status'] == "edited" %} class="table-warning body-row" {% elif transaction['status'] == "reversed" %} class="table-danger body-row" {% else %} class="body-row" {% endif %}>
+                        <tr data-id="{{ transaction['id'] }}" data-price="{{ transaction['price'] }}" data-currency="{{ transaction['currency'] }}" {% if transaction['type'] == 'expense' or transaction['type'] == 'buy' %} data-type="buy" {% else %} data-type="sell" {% endif %} data-status="{{ transaction['status'] }}" {% if transaction['status'] == "edited" %} class="table-warning body-row" {% elif transaction['status'] == "reversed" %} class="table-danger body-row" {% else %} class="body-row" {% endif %}>
                             <th scope="row">{{ transaction['id'] }}</th>
                             <td>{% if transaction['item_name'] == None %} Others {% else %} {{ transaction['item_name'] }} {% endif %}</td>
                             <td> {{ transaction['type'] | capitalize }}</td>
