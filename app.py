@@ -83,7 +83,7 @@ def utc_to_local(utc_string):
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
     # Format the local time as a string
     local_time_str = local_dt.strftime('%Y-%m-%d')
-    return local_time_str + "JST"
+    return local_time_str + " JST"
 
 
 @app.route("/")
@@ -333,7 +333,9 @@ def transactions():
                 if match == len(query):
                     result_list.append(each['id'])
             return jsonify(result_list)
+
         else:
+
             return render_template("transactions.html", transactions = transactions, current_year = current_year)
 
 
