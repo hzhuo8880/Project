@@ -77,13 +77,23 @@ current_year = datetime.datetime.now().year
 def utc_to_local(utc_string):
     # Convert the UTC string to a datetime object
     utc_dt = datetime.datetime.strptime(utc_string, '%Y-%m-%d %H:%M:%S')
-    # Get timezone
-    local_tz = pytz.timezone('Asia/Tokyo')
+
+    user_timezone = datetime.datetime.now().astimezone().tzname()
+    if user_timezone == 'JST':
+        # Automatically detect the user's local timezone
+        local_tz = pytz.timezone('Asia/Tokyo')
+    elif user_timezone == 'CST':
+        local_tz = pytz.timezone('Asia/Shanghai')
+    else:
+        return "UTC " + utc_string
+
     # Convert to local time
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+
     # Format the local time as a string
     local_time_str = local_dt.strftime('%Y-%m-%d')
-    return local_time_str + " JST"
+    return local_time_str + " " + user_timezone
+
 
 
 @app.route("/")
@@ -174,7 +184,7 @@ def item(item_id):
                 flash('invalid inputs', 'danger')
                 return redirect(f"/item/{item_id}")
 
-            if note != "" or note != None:
+            if note != "" and note != None:
                 db.execute("INSERT INTO notes (item_id, note, timestamp) VALUES (?, ?, ?)", item_id, note, utc)
 
             if getback("formUsage") == "buy":
@@ -235,9 +245,8 @@ def item(item_id):
 
         notes = db.execute("SELECT * FROM notes WHERE item_id = ? ORDER BY timestamp DESC", item_id)
         for note in notes:
-            note['note'] = note['note'] + "\n"
-            note['timestamp'] = utc_to_local(note['timestamp'])
-
+                note['note'] = note['note'] + "\n"
+                note['timestamp'] = utc_to_local(note['timestamp'])
         return render_template("item.html", item = item, item_id = item_id, transactions = transactions, notes = notes, current_year = current_year)
 
 
@@ -347,7 +356,7 @@ def add_new():
         # Get Time
         utc = utc_time()
         # Retrieve form data and get user_id
-        item_name, price, quantity, material, user_id = getback("item_name"), getback("price"), getback("quantity"), getback("material"), session["user_id"]
+        item_name, price, quantity, material, currency, user_id = getback("item_name"), getback("price"), getback("quantity"), getback("material"), getback("currency"), session["user_id"]
 
         # Get tags and clean it
         if getback("tags"):
@@ -378,7 +387,7 @@ def add_new():
             item_id = db.execute("SELECT last_insert_rowid()")[0]['last_insert_rowid()']
             # Add to transactions table
             db.execute(
-                "INSERT INTO transactions (item_id, type, price, quantity, person, timestamp) VALUES (?, ?, ?, ?, ?, ?)", item_id, "buy", price, quantity, user_id, utc)
+                "INSERT INTO transactions (item_id, type, currency, price, quantity, person, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)", item_id, "buy", currency, price, quantity, user_id, utc)
             flash('Successfully added', 'success')
             return redirect("/")
     else:

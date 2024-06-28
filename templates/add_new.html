@@ -27,16 +27,31 @@
         <label for="item_img" class="form-label">Image</label>
         <input class="form-control" type="file" id="item_img" name="item_img">
       </div>
+
+
+
+
       <div class="row mb-3">
-        <div class="col">
-          <label for="price" class="form-label">Price</label><span style="color: red">*</span>
-          <input type="number" class="form-control w-auto" min="0" id="price" name="price" aria-describedby="price">
-        </div>
-        <div class="col">
+        <div class="col-4">
           <label for="quantity" class="form-label">Quantity</label><span style="color: red">*</span>
           <input type="number" class="form-control w-50" value="1" min="1" id="quantity" name="quantity" aria-describedby="quantity">
         </div>
+        <div class="col">
+          <div>
+            <label for="price" class="form-label">Price</label><span style="color: red">*</span>
+          </div>
+          <div class="input-group" style="width:80%">
+            <select class="form-select" id="price_unit" name="currency" aria-label="currency">
+              <option selected value="yen">Yen</option>
+              <option value="yuan">Yuan</option>
+            </select>
+            <input type="number" class="form-control w-50" min="0" id="price" name="price" aria-describedby="price">
+          </div>
+        </div>
       </div>
+
+
+
       <div class="mb-3">
         <label for="tags" class="form-label">Tags</label>
         <textarea type="text" class="form-control w-80" id="tags" name="tags" aria-describedby="tagHelp" rows="2"></textarea>
